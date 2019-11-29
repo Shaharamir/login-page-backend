@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
 import { User } from '../models/user';
-import { secretkey } from '../secretkey';
+import { secretkey, secretEmailkey } from '../secretkeys';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { OK, INTERNAL_SERVER_ERROR, NOT_FOUND, BAD_REQUEST } from 'http-status';
+import { INTERNAL_SERVER_ERROR, NOT_FOUND, BAD_REQUEST, ACCEPTED, UNAUTHORIZED } from 'http-status';
+import { sendMail } from '../mailSender/mailSender';
 
 interface IUser {
     firstname: string;
@@ -12,6 +13,7 @@ interface IUser {
     dateOfBirth: string;
     email: string;
     password: string;
+    isEmailConfirmed?: Boolean,
 }
 
 interface IDataBaseUser {
@@ -22,6 +24,7 @@ interface IDataBaseUser {
     dateOfBirth: string,
     email: string,
     password: string,
+    isEmailConfirmed: Boolean,
     __v: number
 }
 
@@ -30,6 +33,19 @@ interface ILogin {
     password: string;
 }
 
+
+export async function confirmEmail(req: Request, res: Response, next: NextFunction) {
+    try {
+        const emailToken: any = jwt.verify(req.params.token, secretEmailkey);
+        await User.updateOne({ username: emailToken.username }, { $set: {isEmailConfirmed: true} }, (err) => {
+            if (err) res.redirect(UNAUTHORIZED, 'http://localhost:3000');
+            res.redirect(ACCEPTED, 'http://localhost:3000');
+        });
+    }
+    catch (err) {
+        res.redirect(UNAUTHORIZED, 'http://localhost:3000');
+    }
+}
 
 export async function getUser(req: Request, res: Response, next: NextFunction) {
     const userToken = res.locals.user;
@@ -47,9 +63,24 @@ export async function signUpUser(req: Request, res: Response, next: NextFunction
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(user.password, salt);
     user.password = hashPassword;
+    user.isEmailConfirmed = false;
     const userToInsert = new User(user)
-    await userToInsert.save();
-    res.send("User signed up succesfully")
+    try {
+        const emailToken = jwt.sign({ username: user.username}, secretEmailkey, { algorithm: 'HS512', expiresIn: '7d' });
+        sendMail(user.email, emailToken)
+        .then(async () => {
+            await userToInsert.save();
+            res.send('User signed up succesfully')
+        })
+        .catch((err) => {
+            console.log(err)
+            res.status(INTERNAL_SERVER_ERROR).send('Error occurred. please try again later')
+        })
+    }
+    catch(err) {
+        console.log(err)
+        res.status(INTERNAL_SERVER_ERROR).send('Error occurred. please try again later')
+    }
 }
 
 export async function loginUser(req: Request, res: Response, next: NextFunction) {

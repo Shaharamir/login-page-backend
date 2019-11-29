@@ -4,7 +4,8 @@ export const User = mongoose.model('Users', {
     firstname: String,
     lastname: String,
     username: String,
-    dateOfBirth: Date,
+    dateOfBirth: String,
     email: String,
-    password: String
+    password: String,
+    isEmailConfirmed: Boolean,
  });

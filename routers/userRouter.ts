@@ -3,6 +3,7 @@ const userController = require('../controllers/userController');
 import authMiddleware from '../middlewares/auth';
 
 router.get('/', authMiddleware, userController.getUser);
+router.get('/confirmEmail/:token', userController.confirmEmail);
 router.put('/', userController.signUpUser);
 router.post('/login', userController.loginUser);
 router.get('/checkIfUsernameExist/:username', userController.checkIfUsernameExist);

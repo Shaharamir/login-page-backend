@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken';
-import { secretkey } from '../secretkey';
+import { secretkey } from '../secretkeys';
 import { UNAUTHORIZED } from 'http-status';
 
 export default function authMiddleware(req: Request, res: Response, next: NextFunction) {
