@@ -1,20 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
-import { User } from '../models/user';
+import { User, IUser } from '../models/user';
 import { secretkey, secretEmailkey } from '../secretkeys';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { INTERNAL_SERVER_ERROR, NOT_FOUND, BAD_REQUEST, ACCEPTED, UNAUTHORIZED } from 'http-status';
 import { sendMail } from '../mailSender/mailSender';
-
-interface IUser {
-    firstname: string;
-    lastname: string;
-    username: string;
-    dateOfBirth: string;
-    email: string;
-    password: string;
-    isEmailConfirmed?: Boolean,
-}
+import { Document } from 'mongoose';
 
 interface IDataBaseUser {
     _id: string,
@@ -38,8 +29,8 @@ export async function confirmEmail(req: Request, res: Response, next: NextFuncti
     try {
         const emailToken: any = jwt.verify(req.params.token, secretEmailkey);
         await User.updateOne({ username: emailToken.username }, { $set: {isEmailConfirmed: true} }, (err) => {
-            if (err) res.redirect(UNAUTHORIZED, 'http://localhost:3000');
-            res.redirect(ACCEPTED, 'http://localhost:3000');
+            if (err) res.redirect('http://localhost:3000', UNAUTHORIZED);
+            res.redirect('http://localhost:3000', ACCEPTED);
         });
     }
     catch (err) {
@@ -68,7 +59,7 @@ export async function resendEmailConfirmation(req: Request, res: Response, next:
 
 export async function getUser(req: Request, res: Response, next: NextFunction) {
     const userToken = res.locals.user;
-    const result: IDataBaseUser = await User.findOne({ _id : userToken.uid }).exec();
+    const result = await User.findOne({ _id : userToken.uid }).exec();
     if (result) {
         result.password = undefined;
         result.__v = undefined;
