@@ -6,6 +6,7 @@ router.get('/', authMiddleware, userController.getUser);
 router.get('/confirmEmail/:token', userController.confirmEmail);
 router.put('/', userController.signUpUser);
 router.post('/login', userController.loginUser);
+router.post('/resendEmailConfirmation', userController.resendEmailConfirmation);
 router.get('/checkIfUsernameExist/:username', userController.checkIfUsernameExist);
 router.get('/checkIfEmailExist/:email', userController.checkIfEmailExist);
 

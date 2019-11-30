@@ -47,6 +47,25 @@ export async function confirmEmail(req: Request, res: Response, next: NextFuncti
     }
 }
 
+export async function resendEmailConfirmation(req: Request, res: Response, next: NextFunction) {
+    const user: IDataBaseUser = req.body;
+    try {
+        const emailToken = jwt.sign({ username: user.username}, secretEmailkey, { algorithm: 'HS512', expiresIn: '7d' });
+        sendMail(user.email, emailToken)
+        .then(async () => {
+            res.send(`Mail send to ${user.email} succesfuly`)
+        })
+        .catch((err) => {
+            console.log(err)
+            res.status(INTERNAL_SERVER_ERROR).send('Error occurred with sending email. please try again later')
+        })
+    }
+    catch(err) {
+        console.log(err)
+        res.status(INTERNAL_SERVER_ERROR).send('Error occurred with generating email token. please try again later')
+    }
+}
+
 export async function getUser(req: Request, res: Response, next: NextFunction) {
     const userToken = res.locals.user;
     const result: IDataBaseUser = await User.findOne({ _id : userToken.uid }).exec();
@@ -74,12 +93,12 @@ export async function signUpUser(req: Request, res: Response, next: NextFunction
         })
         .catch((err) => {
             console.log(err)
-            res.status(INTERNAL_SERVER_ERROR).send('Error occurred. please try again later')
+            res.status(INTERNAL_SERVER_ERROR).send('Error occurred with sending email. please try again later')
         })
     }
     catch(err) {
         console.log(err)
-        res.status(INTERNAL_SERVER_ERROR).send('Error occurred. please try again later')
+        res.status(INTERNAL_SERVER_ERROR).send('Error occurred with generating email token. please try again later')
     }
 }
 
