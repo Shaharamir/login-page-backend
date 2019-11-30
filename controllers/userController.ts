@@ -7,7 +7,7 @@ import { INTERNAL_SERVER_ERROR, NOT_FOUND, BAD_REQUEST, ACCEPTED, UNAUTHORIZED }
 import { sendMail } from '../mailSender/mailSender';
 import { Document } from 'mongoose';
 
-interface IDataBaseUser {
+export interface IDataBaseUser {
     _id: string,
     firstname: string,
     lastname: string,

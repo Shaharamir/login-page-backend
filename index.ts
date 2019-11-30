@@ -3,9 +3,10 @@ import cors from 'cors';
 import userRouter from './routers/userRouter';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
-import socketIo from 'socket.io';
+import socketIo, { Socket } from 'socket.io';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
+import { IDataBaseUser } from './controllers/userController';
 
 const app = express();
 
@@ -31,7 +32,9 @@ const server: Server = app.listen(8080, () => {
 
 const io = socketIo.listen(server);
 
-io.on('connection', socket => {
+io.on('connection', (socket: Socket) => {
+    const user: IDataBaseUser = socket.handshake.query.user;
+    // console.log(io.sockets.connected)
     console.log('User connected')
     socket.on('disconnect', () => {
       console.log('user disconnected')
