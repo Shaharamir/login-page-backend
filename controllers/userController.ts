@@ -3,9 +3,8 @@ import { User, IUser } from '../models/user';
 import { secretkey, secretEmailkey } from '../secretkeys';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { INTERNAL_SERVER_ERROR, NOT_FOUND, BAD_REQUEST, ACCEPTED, UNAUTHORIZED } from 'http-status';
+import { INTERNAL_SERVER_ERROR, NOT_FOUND, BAD_REQUEST, ACCEPTED, UNAUTHORIZED, NO_CONTENT } from 'http-status';
 import { sendMail } from '../mailSender/mailSender';
-import { Document } from 'mongoose';
 
 export interface IDataBaseUser {
     _id: string,
@@ -26,11 +25,15 @@ interface ILogin {
 
 
 export async function confirmEmail(req: Request, res: Response, next: NextFunction) {
+
+    if(!req.params.token) res.status(NO_CONTENT);
+
+    console.log(req.params);
     try {
         const emailToken: any = jwt.verify(req.params.token, secretEmailkey);
         await User.updateOne({ username: emailToken.username }, { $set: {isEmailConfirmed: true} }, (err) => {
-            if (err) res.redirect('http://localhost:3000', UNAUTHORIZED);
-            res.redirect('http://localhost:3000', ACCEPTED);
+            if (err) res.redirect(UNAUTHORIZED, 'http://localhost:3000');
+            res.redirect(ACCEPTED, 'http://localhost:3000');
         });
     }
     catch (err) {
