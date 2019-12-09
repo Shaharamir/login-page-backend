@@ -7,6 +7,7 @@ import socketIo, { Socket } from 'socket.io';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { IDataBaseUser } from './controllers/userController';
+import { json } from 'body-parser';
 
 const app = express();
 
@@ -37,20 +38,51 @@ const io = socketIo.listen(server);
 let currentTurn = undefined;
 let currentBoard = undefined
 
+interface IGame {
+  square: {
+      column: number;
+      row: number;
+      isChecker: boolean;
+      checkerColor: 'white' | 'black' | undefined;
+  }
+}
+
+const moveChecker = (JSONStringify: string, column: number, row: number, moveToColumn: number, moveToRow: number ) => {
+  const initChecker = {
+      isChecker: false,
+      checkerColor: undefined,
+  }
+
+  const setChecker = (color: 'white' | 'black') => {
+    return {
+        isChecker: true,
+        checkerColor: color
+    }
+  }
+  const game = JSON.parse(JSONStringify)
+  const currentChecker = game[column][row].square;
+  const moveToChecker = game[moveToColumn][moveToRow].square
+  game[column][row].square = {...currentChecker, ...initChecker}
+  game[moveToColumn][moveToRow].square = {...moveToChecker, ...setChecker(currentChecker.checkerColor)}
+  return game;
+}
+
 io.on('connection', (socket: Socket) => {
     const user: IDataBaseUser = socket.handshake.query.user;
     socket.join('fuck');
-    console.log(io.sockets.connected)
+    // console.log(io.sockets.connected)
     console.log('User connected')
     socket.on('disconnect', () => {
       console.log('user disconnected')
     })
     socket.on('move', ({turn, board}) => {
-      console.log(`move start: \n ${turn}, ${board}`)
+      // console.log(`move start: \n ${turn}, ${board}`)
       currentBoard = board;
       currentTurn = turn;
       setTimeout(() => {
-        socket.emit('moveEnd', ({turn: currentTurn, board: currentBoard}))
+        const upadatedBoard = moveChecker(board, 2, 4, 3, 3);
+        currentBoard = upadatedBoard;
+        socket.emit('moveEnd', ({turn: currentTurn, board: upadatedBoard}))
       }, 2000)
     })
   })
