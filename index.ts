@@ -34,6 +34,8 @@ const sockets: Socket[] = [];
 
 const io = socketIo.listen(server);
 
+let currentTurn = undefined;
+let currentBoard = undefined
 
 io.on('connection', (socket: Socket) => {
     const user: IDataBaseUser = socket.handshake.query.user;
@@ -42,6 +44,14 @@ io.on('connection', (socket: Socket) => {
     console.log('User connected')
     socket.on('disconnect', () => {
       console.log('user disconnected')
+    })
+    socket.on('move', ({turn, board}) => {
+      console.log(`move start: \n ${turn}, ${board}`)
+      currentBoard = board;
+      currentTurn = turn;
+      setTimeout(() => {
+        socket.emit('moveEnd', ({turn: currentTurn, board: currentBoard}))
+      }, 2000)
     })
   })
 
