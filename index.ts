@@ -7,6 +7,7 @@ import socketIo, { Socket } from 'socket.io';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { IDataBaseUser } from './controllers/userController';
+import produce from 'immer';
 import { json } from 'body-parser';
 
 const app = express();
@@ -40,14 +41,17 @@ let currentBoard = undefined
 
 interface IGame {
   square: {
-      column: number;
-      row: number;
-      isChecker: boolean;
-      checkerColor: 'white' | 'black' | undefined;
+    column: number;
+    row: number;
+    isChecker: boolean;
+    checkerColor: 'white' | 'black' | undefined;
+    squareColor: 'white' | 'black';
+    shouldHighlight: boolean;
   }
 }
 
-const moveChecker = (JSONStringify: string, column: number, row: number, moveToColumn: number, moveToRow: number ) => {
+// row: number, column: number, moveToColumn: number, moveToRow: number )
+const moveChecker = (JSONStringify: string, current: {row: number, col: number}, target: {row: number, col: number}) => {
   const initChecker = {
       isChecker: false,
       checkerColor: undefined,
@@ -59,11 +63,12 @@ const moveChecker = (JSONStringify: string, column: number, row: number, moveToC
         checkerColor: color
     }
   }
-  const game = JSON.parse(JSONStringify)
-  const currentChecker = game[column][row].square;
-  const moveToChecker = game[moveToColumn][moveToRow].square
-  game[column][row].square = {...currentChecker, ...initChecker}
-  game[moveToColumn][moveToRow].square = {...moveToChecker, ...setChecker(currentChecker.checkerColor)}
+  const game: IGame[][] = JSON.parse(JSONStringify)
+  game.map((row, rowIndex) => row.map((col, colIndex) => game[rowIndex][colIndex].square.shouldHighlight = false));
+  const currentChecker = game[current.row][current.col].square;
+  const moveToChecker = game[target.row][target.col].square
+  game[current.row][current.col].square = {...currentChecker, ...initChecker}
+  game[target.row][target.col].square = {...moveToChecker, ...setChecker(currentChecker.checkerColor)}
   return game;
 }
 
@@ -75,15 +80,13 @@ io.on('connection', (socket: Socket) => {
     socket.on('disconnect', () => {
       console.log('user disconnected')
     })
-    socket.on('move', ({turn, board}) => {
+    socket.on('move', ({turn, current, target, board}) => {
       // console.log(`move start: \n ${turn}, ${board}`)
       currentBoard = board;
       currentTurn = turn;
-      setTimeout(() => {
-        const upadatedBoard = moveChecker(board, 2, 4, 3, 3);
-        currentBoard = upadatedBoard;
-        socket.emit('moveEnd', ({turn: currentTurn, board: upadatedBoard}))
-      }, 2000)
+      const upadatedBoard = moveChecker(board, current, target);
+      currentBoard = upadatedBoard;
+      socket.emit('moveEnd', ({turn: currentTurn, board: currentBoard}))
     })
   })
 
