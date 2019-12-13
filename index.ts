@@ -7,7 +7,6 @@ import socketIo, { Socket } from 'socket.io';
 import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { IDataBaseUser } from './controllers/userController';
-import produce from 'immer';
 import { json } from 'body-parser';
 
 const app = express();
@@ -63,6 +62,7 @@ const moveChecker = (JSONStringify: string, current: {row: number, col: number},
         checkerColor: color
     }
   }
+  
   const game: IGame[][] = JSON.parse(JSONStringify)
   game.map((row, rowIndex) => row.map((col, colIndex) => game[rowIndex][colIndex].square.shouldHighlight = false));
   const currentChecker = game[current.row][current.col].square;
