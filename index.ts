@@ -46,6 +46,7 @@ interface IGame {
     checkerColor: 'white' | 'black' | undefined;
     squareColor: 'white' | 'black';
     shouldHighlight: boolean;
+    isKing: boolean;
   }
 }
 
@@ -61,7 +62,8 @@ const gameInit: IGame[][] = Array.from({ length: 8 }, (v, rowIndex) => Array.fro
           isChecker: isChecker,
           checkerColor: isChecker ? checkerColor : undefined,
           squareColor: columnIndex % 2 === 0 ? rowIndex % 2 === 0 ? 'black' : 'white' : rowIndex % 2 === 0 ? 'white' : 'black',
-          shouldHighlight: false
+          shouldHighlight: false,
+          isKing: false,
       }
   }
 }))
@@ -78,6 +80,12 @@ const moveChecker = (game: IGame[][], current: {row: number, col: number}, targe
   game[current.row][current.col].square.isChecker = false;
   game[target.row][target.col].square.isChecker = true;
   game[target.row][target.col].square.checkerColor = currentChecker.checkerColor;
+  if(target.row === 7 && currentChecker.checkerColor === 'white') {
+    game[target.row][target.col].square.isKing = true;
+  }
+  else if(target.row === 0 && currentChecker.checkerColor === 'black') {
+    game[target.row][target.col].square.isKing = true;
+  }
   game[current.row][current.col].square.checkerColor = undefined;
   return game;
 }
