@@ -75,18 +75,20 @@ const moveChecker = (game: IGame[][], current: {row: number, col: number}, targe
       const eatedCol = (current.col+target.col)/2
       game[eatedRow][eatedCol].square.isChecker = false;
       game[eatedRow][eatedCol].square.checkerColor = undefined;
+      game[eatedRow][eatedCol].square.isKing = false;
   }
   const currentChecker = game[current.row][current.col].square;
   game[current.row][current.col].square.isChecker = false;
   game[target.row][target.col].square.isChecker = true;
   game[target.row][target.col].square.checkerColor = currentChecker.checkerColor;
-  if(target.row === 7 && currentChecker.checkerColor === 'white') {
+  if(target.row === 7 && currentChecker.checkerColor === 'white' || currentChecker.isKing) {
     game[target.row][target.col].square.isKing = true;
   }
-  else if(target.row === 0 && currentChecker.checkerColor === 'black') {
+  else if(target.row === 0 && currentChecker.checkerColor === 'black' || currentChecker.isKing) {
     game[target.row][target.col].square.isKing = true;
   }
   game[current.row][current.col].square.checkerColor = undefined;
+  game[current.row][current.col].square.isKing = false;
   return game;
 }
 
